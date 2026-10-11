@@ -1,0 +1,71 @@
+# PawConnect on Render: the Spring Boot API (public) and the AI service (private).
+# The React frontend deploys to Vercel (frontend/vercel.json). Its environment variables are set in Vercel.
+
+services:
+  # 1. Spring Boot API. Public. Every request is checked against a Supabase token.
+  - type: web
+    name: pawconnect-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    healthCheckPath: /api/actuator/health
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: DB_URL
+        sync: false          # jdbc:postgresql://<aiven-host>:<port>/defaultdb?sslmode=require
+      - key: DB_USER
+        sync: false          # avnadmin (Aiven)
+      - key: DB_PASSWORD
+        sync: false
+      - key: SUPABASE_URL
+        sync: false          # https://<project-ref>.supabase.co
+      - key: SUPABASE_JWT_SECRET
+        sync: false          # only for legacy projects; leave empty for asymmetric-key projects
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false          # server-only
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false          # e.g. https://pawconnect.vercel.app (no trailing slash)
+      - key: AI_SERVICE_BASE_URL
+        value: http://pawconnect-ai-service:8000   # private network address of the AI service
+      - key: AI_INTERNAL_TOKEN
+        sync: false          # the same value as on the AI service
+      - key: CALL_ROOM_SECRET
+        sync: false          # at least 32 characters
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+
+  # 2. FastAPI AI service. Private: reachable only from the backend. Private services need a paid plan.
+  - type: pserv
+    name: pawconnect-ai-service
+    runtime: docker
+    dockerfilePath: ./ai-service/Dockerfile
+    dockerContext: ./ai-service
+    plan: starter
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: ENVIRONMENT
+        value: production
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: AI_MODEL_GROQ
+        value: llama-3.1-8b-instant   # confirm against GET https://api.groq.com/openai/v1/models before deploying
+      - key: AI_INTERNAL_TOKEN
+        sync: false          # the same value as the backend

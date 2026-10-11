@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PawConnect - Complete Project Interactive Preview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            heading: ['Outfit', 'sans-serif']
+          },
+          colors: {
+            brand: {
+              teal: '#0D9488',
+              'teal-dark': '#115E59',
+              'teal-light': '#CCFBF1',
+              amber: '#F59E0B',
+              'amber-dark': '#D97706',
+              coral: '#F43F5E'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    h1, h2, h3, h4, .font-heading { font-family: 'Outfit', sans-serif; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Interactive Test Controller Ribbon -->
+  <aside aria-label="Interactive test controller" class="bg-slate-900 text-white text-xs px-4 py-2 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 sticky top-0 z-50">
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="font-bold tracking-wide uppercase text-slate-300">PawConnect Project Preview</span>
+      <span class="text-slate-500">|</span>
+      <span class="text-slate-300">Role State: <strong id="ribbonStateText" class="text-amber-400">Guest (Unauthenticated)</strong></span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-slate-400">Quick Test Controls:</span>
+      <button onclick="setRole('GUEST')" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">Home (Guest)</button>
+      <button onclick="setRole('PET_PARENT')" class="px-2.5 py-1 rounded bg-teal-600 hover:bg-teal-500 text-white font-medium transition">🐾 Log in Dog Parent</button>
+      <button onclick="setRole('VET')" class="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-medium transition">🩺 Log in Vet</button>
+      <button onclick="setRole('GUEST')" class="px-2.5 py-1 rounded bg-rose-900/60 hover:bg-rose-800 text-rose-200 transition">Sign Out</button>
+    </div>
+  </aside>
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-8 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 cursor-pointer" onclick="navigateTo('home')">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-teal to-emerald-500 flex items-center justify-center text-white text-xl shadow-md shadow-teal-500/20">
+            🐾
+          </div>
+          <div>
+            <span class="text-xl font-bold tracking-tight text-slate-900 font-heading">Paw<span class="text-brand-teal">Connect</span></span>
+            <span class="block text-[10px] font-semibold text-brand-teal tracking-wider uppercase">Canine Care & Welfare</span>
+          </div>
+        </div>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+          <button onclick="navigateTo('home')" id="navLinkHome" class="text-brand-teal font-semibold transition hover:text-brand-teal">Home</button>
+          <button onclick="navigateTo('store')" id="navLinkStore" class="transition hover:text-brand-teal">Pet Store</button>
+          <button onclick="navigateTo('campaigns')" id="navLinkCampaigns" class="transition hover:text-brand-teal">Welfare Campaigns</button>
+          <button onclick="navigateTo('events')" id="navLinkEvents" class="transition hover:text-brand-teal">Community Events</button>
+          
+          <!-- Role Gated Dashboard Links -->
+          <button onclick="navigateTo('dashboard')" id="navLinkParentDash" class="hidden text-brand-teal font-semibold items-center gap-1.5 bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-200 hover:bg-teal-100 transition">
+            <span>🐾 My Pet Hub</span>
+          </button>
+          <button onclick="navigateTo('dashboard')" id="navLinkVetDash" class="hidden text-blue-700 font-semibold items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-100 transition">
+            <span>🩺 Vet Clinic Portal</span>
+          </button>
+        </nav>
+
+        <!-- Right User Actions -->
+        <div class="flex items-center gap-3">
+          <!-- Unauthenticated actions -->
+          <div id="unauthActions" class="flex items-center gap-2">
+            <button onclick="openAuthModal('PET_PARENT')" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-teal-800 bg-teal-50 hover:bg-teal-100 rounded-xl border border-teal-200 transition">
+              <span>🐾 Dog Parent</span>
+            </button>
+            <button onclick="openAuthModal('VET')" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition">
+              <span>🩺 Vet Portal</span>
+            </button>
+            <button onclick="openAuthModal()" class="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-sm transition">
+              Access Portal
+            </button>
+          </div>
+
+          <!-- Authenticated Dog Parent actions -->
+          <div id="parentAuthActions" class="hidden flex items-center gap-3">
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 rounded-full border border-amber-200">
+              <span class="text-sm">🪙</span>
+              <span class="text-xs font-bold text-amber-900">1,450 Coins</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Ritu Verma" class="w-8 h-8 rounded-full object-cover border-2 border-brand-teal">
+              <span class="text-xs font-semibold text-slate-800 hidden sm:inline">Ritu Verma</span>
+            </div>
+            <button onclick="setRole('GUEST')" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-rose-600 transition">
+              Sign Out
+            </button>
+          </div>
+
+          <!-- Authenticated Vet actions -->
+          <div id="vetAuthActions" class="hidden flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-[11px] font-bold border border-blue-200">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span> Verified Vet
+            </span>
+            <div class="flex items-center gap-2">
+              <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=100&auto=format&fit=crop&q=80" alt="Dr. Aarav Sharma" class="w-8 h-8 rounded-full object-cover border-2 border-blue-600">
+              <span class="text-xs font-semibold text-slate-800 hidden sm:inline">Dr. Aarav Sharma</span>
+            </div>
+            <button onclick="setRole('GUEST')" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-rose-600 transition">
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content View Area -->
+  <main class="flex-1">
+
+    <!-- VIEW 1: HOME / LANDING PAGE -->
+    <section id="viewHome" class="space-y-16 pb-16">
+      <!-- Hero Section -->
+      <div class="relative overflow-hidden bg-gradient-to-b from-teal-50/70 via-white to-slate-50 py-16 sm:py-24 border-b border-slate-200/60">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            <!-- Left Hero Content -->
+            <div class="lg:col-span-7 space-y-6">
+              <!-- Small Badge for PawCoin Conversion (User explicitly requested small font) -->
+              <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 shadow-sm">
+                <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span class="text-[11px] font-semibold text-emerald-800 tracking-wide">
+                  🪙 1 PawCoin = ₹1 street dog meal fund
+                </span>
+                <span class="text-[10px] bg-emerald-200/70 text-emerald-900 px-1.5 py-0.5 rounded font-bold uppercase">Welfare Loop</span>
+              </div>
+
+              <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.12]">
+                Every Wag Deserves <br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-teal via-teal-600 to-emerald-600">
+                  World-Class Care
+                </span> & Dignity.
+              </h1>
+
+              <p class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl">
+                The integrated digital health passport and teleconsultation platform for canine parents, verified veterinary surgeons, and street dog welfare rescue networks.
+              </p>
+
+              <!-- Dual Portal Entry Buttons -->
+              <div class="flex flex-wrap items-center gap-4 pt-2">
+                <button onclick="setRole('PET_PARENT')" class="px-6 py-3.5 rounded-2xl bg-brand-teal hover:bg-brand-teal-dark text-white font-bold text-sm shadow-lg shadow-teal-700/25 transition transform hover:-translate-y-0.5 flex items-center gap-2.5">
+                  <span class="text-lg">🐾</span>
+                  <span>Enter Dog Parent Hub</span>
+                </button>
+                <button onclick="setRole('VET')" class="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-sm border-2 border-slate-200 hover:border-blue-400 shadow-sm transition transform hover:-translate-y-0.5 flex items-center gap-2.5">
+                  <span class="text-lg">🩺</span>
+                  <span>Veterinarian Portal</span>
+                </button>
+              </div>
+
+              <!-- Quick Metrics in subtle font -->
+              <div class="pt-6 border-t border-slate-200/80 grid grid-cols-3 gap-4 text-left">
+                <div>
+                  <div class="text-xl font-extrabold text-slate-900 font-heading">12,400+</div>
+                  <div class="text-xs text-slate-500">Vaccinated Dogs</div>
+                </div>
+                <div>
+                  <div class="text-xl font-extrabold text-slate-900 font-heading">450+</div>
+                  <div class="text-xs text-slate-500">Licensed Vets</div>
+                </div>
+                <div>
+                  <div class="text-xl font-extrabold text-slate-900 font-heading">₹3.8 Lakh</div>
+                  <div class="text-xs text-slate-500">Meals Distributed</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Hero Card with Real Dog Photography -->
+            <div class="lg:col-span-5">
+              <div class="relative mx-auto max-w-md">
+                <!-- Decorative Blur -->
+                <div class="absolute -top-4 -right-4 w-72 h-72 bg-teal-200 rounded-full filter blur-3xl opacity-40 -z-10"></div>
+                <div class="absolute -bottom-4 -left-4 w-72 h-72 bg-amber-200 rounded-full filter blur-3xl opacity-40 -z-10"></div>
+
+                <div class="overflow-hidden rounded-3xl bg-white shadow-2xl border border-slate-100">
+                  <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80" alt="Happy Golden Retriever Dogs" class="h-80 w-full object-cover">
+                  
+                  <div class="p-6 bg-gradient-to-br from-brand-teal to-brand-teal-dark text-white">
+                    <div class="flex items-center justify-between">
+                      <div>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-teal-200">Live Canine Welfare Loop</span>
+                        <!-- Discreet small font text for 1 Coin = 1 Meal as requested -->
+                        <div class="mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-xs font-semibold text-brand-amber border border-amber-300/30">
+                          <span>🪙</span> 1 Coin = ₹1 Street Dog Meal Fund
+                        </div>
+                      </div>
+                      <div class="rounded-2xl bg-white/10 p-3 text-2xl backdrop-blur">
+                        🍲
+                      </div>
+                    </div>
+                    <p class="mt-3 text-xs leading-relaxed text-teal-100">
+                      Every vaccination recorded, symptom logged, and checkup scheduled earns PawCoins that verified shelter NGOs redeem directly to feed and rescue stray dogs.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Highlight Grid with Dog Images -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto space-y-3 mb-12">
+          <span class="text-xs font-bold uppercase tracking-wider text-brand-teal bg-teal-50 px-3 py-1 rounded-full border border-teal-200">Architecture & Features</span>
+          <h2 class="text-3xl font-extrabold text-slate-900 font-heading">Engineered for Compassion & Clinical Rigor</h2>
+          <p class="text-slate-600 text-sm">Strict consent protection, licensed veterinary dossiers, and community rewards in one unified ecosystem.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Card 1 -->
+          <div class="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-sm hover:shadow-md transition">
+            <div class="h-44 rounded-2xl overflow-hidden mb-5">
+              <img src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=600&auto=format&fit=crop&q=80" alt="Golden Retriever Health Passport" class="w-full h-full object-cover">
+            </div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xl">🪪</span>
+              <h3 class="text-lg font-bold text-slate-900 font-heading">Digital Pet Passport</h3>
+            </div>
+            <p class="text-slate-600 text-xs leading-relaxed">
+              Maintain immutable records for vaccinations (DHPP, Rabies, Bordetella), microchip identifiers, allergy warnings, and diet regimes.
+            </p>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-sm hover:shadow-md transition">
+            <div class="h-44 rounded-2xl overflow-hidden mb-5">
+              <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&auto=format&fit=crop&q=80" alt="Indian Pariah Dog Rescue" class="w-full h-full object-cover">
+            </div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xl">🩺</span>
+              <h3 class="text-lg font-bold text-slate-900 font-heading">Consent-Gated Vet Access</h3>
+            </div>
+            <p class="text-slate-600 text-xs leading-relaxed">
+              Veterinary doctors can only access pet medical histories when explicitly authorized by the pet parent. Instant digital prescriptions with license verification.
+            </p>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-sm hover:shadow-md transition">
+            <div class="h-44 rounded-2xl overflow-hidden mb-5">
+              <img src="https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?w=600&auto=format&fit=crop&q=80" alt="Indie Street Dog Care" class="w-full h-full object-cover">
+            </div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xl">🪙</span>
+              <h3 class="text-lg font-bold text-slate-900 font-heading">PawCoin Welfare Protocol</h3>
+            </div>
+            <p class="text-slate-600 text-xs leading-relaxed">
+              Earn coins for proactive healthcare checkups. Donate coins with 1-click to verified shelter drives, winter jackets, and street-dog sterilization camps.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: LOGIN REQUIRED / ROLE GATE VIEW -->
+    <section id="viewLoginRequired" class="hidden py-16 px-4 max-w-4xl mx-auto">
+      <div class="text-center space-y-3 mb-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-800 text-xs font-bold border border-amber-200">
+          🔒 Secure Portal Login Required
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-900 font-heading">Choose Your Role to Access Dashboard</h2>
+        <p class="text-slate-600 text-sm max-w-lg mx-auto">
+          PawConnect strictly separates Dog Parent tools and Veterinary clinical workspaces for privacy and security.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Dog Parent Card -->
+        <div class="bg-white rounded-3xl p-8 border-2 border-teal-200 shadow-xl hover:shadow-2xl hover:border-teal-400 transition flex flex-col justify-between">
+          <div class="space-y-5">
+            <div class="h-40 rounded-2xl overflow-hidden relative">
+              <img src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=600&auto=format&fit=crop&q=80" alt="Dog Parent Bruno" class="w-full h-full object-cover">
+              <div class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur rounded-lg text-white text-[10px] font-semibold">
+                🐾 Pet Parent Workspace
+              </div>
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold text-slate-900 font-heading">Dog Parent</h3>
+              <p class="text-slate-600 text-xs mt-1 leading-relaxed">
+                Log in to manage your dog profiles (Bruno, Maya, Rocky), track vaccinations, log symptoms, run AI triage, and redeem PawCoins.
+              </p>
+            </div>
+            <ul class="text-xs text-slate-600 space-y-2">
+              <li class="flex items-center gap-2">✅ Canine Digital Health Passport</li>
+              <li class="flex items-center gap-2">✅ Teleconsultation Booking</li>
+              <li class="flex items-center gap-2">✅ PawCoin Wallet & Welfare Giving</li>
+            </ul>
+          </div>
+          <button onclick="setRole('PET_PARENT')" class="mt-8 w-full py-3.5 rounded-2xl bg-brand-teal hover:bg-brand-teal-dark text-white font-bold text-sm shadow-md transition">
+            Sign In as Dog Parent →
+          </button>
+        </div>
+
+        <!-- Vet Card -->
+        <div class="bg-white rounded-3xl p-8 border-2 border-blue-200 shadow-xl hover:shadow-2xl hover:border-blue-400 transition flex flex-col justify-between">
+          <div class="space-y-5">
+            <div class="h-40 rounded-2xl overflow-hidden relative">
+              <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=600&auto=format&fit=crop&q=80" alt="Veterinarian Dr Aarav Sharma" class="w-full h-full object-cover">
+              <div class="absolute bottom-2 left-2 px-2.5 py-1 bg-black/60 backdrop-blur rounded-lg text-white text-[10px] font-semibold">
+                🩺 Clinical Practitioner Portal
+              </div>
+            </div>
+            <div>
+              <h3 class="text-2xl font-bold text-slate-900 font-heading">Licensed Veterinarian</h3>
+              <p class="text-slate-600 text-xs mt-1 leading-relaxed">
+                Log in with your VCI veterinary credentials to review consented patient dossiers, issue verified prescriptions, and hold consultations.
+              </p>
+            </div>
+            <ul class="text-xs text-slate-600 space-y-2">
+              <li class="flex items-center gap-2">✅ Patient Clinical Queue</li>
+              <li class="flex items-center gap-2">✅ Consent-Verified Dossier Inspection</li>
+              <li class="flex items-center gap-2">✅ Digital Prescription Pad (Rx)</li>
+            </ul>
+          </div>
+          <button onclick="setRole('VET')" class="mt-8 w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md transition">
+            Sign In as Veterinarian →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: DOG PARENT DASHBOARD (STRICTLY FOR DOG PARENT ROLE) -->
+    <section id="viewParentDashboard" class="hidden py-10 px-4 max-w-7xl mx-auto space-y-8">
+      <!-- Dashboard Header -->
+      <div class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-200">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 rounded-full bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wider">Dog Parent Hub</span>
+            <span class="text-xs text-slate-400">• Authenticated Session</span>
+          </div>
+          <h1 class="text-3xl font-extrabold text-slate-900 font-heading mt-1">Welcome back, Ritu!</h1>
+          <p class="text-xs text-slate-500">Managing 3 canine family members with verified digital health records.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="px-4 py-2 bg-amber-50 rounded-2xl border border-amber-200 text-right">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-amber-700">PawCoin Balance</div>
+            <div class="text-xl font-extrabold text-amber-900 font-heading">1,450 🪙</div>
+            <!-- Small font PawCoin info as requested -->
+            <div class="text-[10px] text-amber-700/80 font-medium">1 Coin = ₹1 Meal Fund</div>
+          </div>
+          <button onclick="alert('Redeeming 250 PawCoins to support street dog vaccination drive!')" class="px-4 py-3 bg-brand-teal hover:bg-brand-teal-dark text-white text-xs font-bold rounded-2xl shadow transition">
+            Donate Meals 🍲
+          </button>
+        </div>
+      </div>
+
+      <!-- Dog Profiles Section with Photos -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-900 font-heading">My Registered Dogs (3)</h2>
+          <button onclick="alert('Add Pet Modal: Registering new canine with Microchip & Breed')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition">
+            + Register Dog
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Dog 1: Bruno -->
+          <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
+            <div class="h-48 relative overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=600&auto=format&fit=crop&q=80" alt="Bruno Golden Retriever" class="w-full h-full object-cover">
+              <span class="absolute top-3 right-3 bg-emerald-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow">
+                HEALTHY
+              </span>
+            </div>
+            <div class="p-5 space-y-3">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 font-heading">Bruno</h3>
+                <p class="text-xs text-slate-500">Golden Retriever • 3 Years • Male</p>
+                <p class="text-[11px] text-slate-400 font-mono mt-0.5">Chip: #985141002341901</p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
+                <div class="flex justify-between text-slate-600">
+                  <span>Next Vaccine:</span>
+                  <strong class="text-teal-700">Rabies (Nov 15, 2026)</strong>
+                </div>
+                <div class="flex justify-between text-slate-600">
+                  <span>Weight:</span>
+                  <span class="font-semibold text-slate-800">31.2 kg</span>
+                </div>
+              </div>
+              <div class="flex gap-2 pt-2">
+                <button onclick="alert('Viewing full immunization passport for Bruno')" class="flex-1 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold rounded-xl transition">
+                  Passport
+                </button>
+                <button onclick="alert('Opening AI Symptom Assistant for Bruno')" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                  AI Triage
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dog 2: Maya -->
+          <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
+            <div class="h-48 relative overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&auto=format&fit=crop&q=80" alt="Maya Indian Pariah Dog" class="w-full h-full object-cover">
+              <span class="absolute top-3 right-3 bg-emerald-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow">
+                UP TO DATE
+              </span>
+            </div>
+            <div class="p-5 space-y-3">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 font-heading">Maya</h3>
+                <p class="text-xs text-slate-500">Indian Pariah (Indie Rescue) • 2 Years • Female</p>
+                <p class="text-[11px] text-slate-400 font-mono mt-0.5">Chip: #985141002341902</p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
+                <div class="flex justify-between text-slate-600">
+                  <span>Next Vaccine:</span>
+                  <strong class="text-teal-700">DHPP Booster (Jan 2027)</strong>
+                </div>
+                <div class="flex justify-between text-slate-600">
+                  <span>Weight:</span>
+                  <span class="font-semibold text-slate-800">18.4 kg</span>
+                </div>
+              </div>
+              <div class="flex gap-2 pt-2">
+                <button onclick="alert('Viewing full immunization passport for Maya')" class="flex-1 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold rounded-xl transition">
+                  Passport
+                </button>
+                <button onclick="alert('Opening AI Symptom Assistant for Maya')" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                  AI Triage
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dog 3: Rocky -->
+          <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
+            <div class="h-48 relative overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?w=600&auto=format&fit=crop&q=80" alt="Rocky Indie Puppy Rescue" class="w-full h-full object-cover">
+              <span class="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow">
+                RECOVERY CARE
+              </span>
+            </div>
+            <div class="p-5 space-y-3">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900 font-heading">Rocky</h3>
+                <p class="text-xs text-slate-500">Indie Pup Rescue • 8 Months • Male</p>
+                <p class="text-[11px] text-slate-400 font-mono mt-0.5">Chip: #985141002341905</p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl space-y-1 text-xs">
+                <div class="flex justify-between text-slate-600">
+                  <span>Next Checkup:</span>
+                  <strong class="text-amber-700">Dr. Aarav Sharma (Oct 18)</strong>
+                </div>
+                <div class="flex justify-between text-slate-600">
+                  <span>Weight:</span>
+                  <span class="font-semibold text-slate-800">9.8 kg</span>
+                </div>
+              </div>
+              <div class="flex gap-2 pt-2">
+                <button onclick="alert('Viewing full immunization passport for Rocky')" class="flex-1 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-bold rounded-xl transition">
+                  Passport
+                </button>
+                <button onclick="alert('Rocky is prescribed Cephalexin and wound dressing')" class="flex-1 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-xl transition">
+                  Care Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consent Sharing Toggle -->
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">🛡️</span>
+            <h3 class="text-sm font-bold text-slate-900">Veterinary Consent Access Gate</h3>
+          </div>
+          <p class="text-xs text-slate-500 max-w-xl">
+            Only verified veterinarians you approve can inspect Bruno, Maya, and Rocky’s bloodwork, vaccine history, and symptom audit logs.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-semibold text-teal-700 bg-teal-50 px-3 py-1.5 rounded-xl border border-teal-200">
+            ✓ Access Granted to Dr. Aarav Sharma
+          </span>
+          <button onclick="alert('Consent revoked for selected clinics')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition">
+            Revoke Access
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: VETERINARIAN CLINICAL DASHBOARD (STRICTLY FOR VET ROLE) -->
+    <section id="viewVetDashboard" class="hidden py-10 px-4 max-w-7xl mx-auto space-y-8">
+      <!-- Vet Header -->
+      <div class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-200">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold uppercase tracking-wider">Vet Clinical Portal</span>
+            <span class="text-xs text-slate-400">• VCI Registration #84920</span>
+          </div>
+          <h1 class="text-3xl font-extrabold text-slate-900 font-heading mt-1">Dr. Aarav Sharma, MVSc</h1>
+          <p class="text-xs text-slate-500">Chief Canine Surgeon & Small Animal Clinician • City Pet Referral Hospital</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="alert('Issuing new tamper-evident digital prescription with VCI digital signature')" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-2xl shadow transition flex items-center gap-2">
+            <span>📝</span> Issue New Prescription
+          </button>
+          <button onclick="alert('Opening WebRTC Teleconsultation Room with patient parent Ritu')" class="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-2xl shadow transition flex items-center gap-2">
+            <span>📹</span> Launch Video Room
+          </button>
+        </div>
+      </div>
+
+      <!-- Clinical Patient Queue (Consented Access Only) -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-900 font-heading">Consented Canine Patient Queue (3)</h2>
+          <span class="text-xs text-slate-500">Only dogs with active parent consent are visible here.</span>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-[11px]">
+              <tr>
+                <th class="p-4">Dog Patient</th>
+                <th class="p-4">Parent</th>
+                <th class="p-4">Reason / Triage</th>
+                <th class="p-4">Consent Status</th>
+                <th class="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <!-- Patient 1: Bruno -->
+              <tr class="hover:bg-slate-50/80 transition">
+                <td class="p-4">
+                  <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1552053831-71594a27632d?w=100&auto=format&fit=crop&q=80" alt="Bruno" class="w-10 h-10 rounded-xl object-cover">
+                    <div>
+                      <div class="font-bold text-slate-900">Bruno</div>
+                      <div class="text-[11px] text-slate-500">Golden Retriever • 3 yrs • 31.2kg</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-4">
+                  <div class="font-semibold text-slate-800">Ritu Verma</div>
+                  <div class="text-[11px] text-slate-400">+91 98765-43210</div>
+                </td>
+                <td class="p-4">
+                  <span class="px-2 py-1 rounded bg-teal-50 text-teal-800 font-semibold text-[10px]">Annual Booster & Dental</span>
+                </td>
+                <td class="p-4">
+                  <span class="inline-flex items-center gap-1 text-emerald-700 font-bold text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active Consent
+                  </span>
+                </td>
+                <td class="p-4 text-right">
+                  <button onclick="alert('Inspecting Bruno clinical dossier: Rabies up to date, no drug allergies')" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl font-bold transition">
+                    View Dossier
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Patient 2: Simba -->
+              <tr class="hover:bg-slate-50/80 transition">
+                <td class="p-4">
+                  <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=100&auto=format&fit=crop&q=80" alt="Simba" class="w-10 h-10 rounded-xl object-cover">
+                    <div>
+                      <div class="font-bold text-slate-900">Simba</div>
+                      <div class="text-[11px] text-slate-500">Beagle • 4 yrs • 14.5kg</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-4">
+                  <div class="font-semibold text-slate-800">Amit Saxena</div>
+                  <div class="text-[11px] text-slate-400">+91 98111-22334</div>
+                </td>
+                <td class="p-4">
+                  <span class="px-2 py-1 rounded bg-rose-50 text-rose-800 font-semibold text-[10px]">Ear Canal Inflammation</span>
+                </td>
+                <td class="p-4">
+                  <span class="inline-flex items-center gap-1 text-emerald-700 font-bold text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active Consent
+                  </span>
+                </td>
+                <td class="p-4 text-right">
+                  <button onclick="alert('Simba dossier: Otitis externa diagnosed. Otic drops prescribed.')" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl font-bold transition">
+                    View Dossier
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Patient 3: Bella -->
+              <tr class="hover:bg-slate-50/80 transition">
+                <td class="p-4">
+                  <div class="flex items-center gap-3">
+                    <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&auto=format&fit=crop&q=80" alt="Bella" class="w-10 h-10 rounded-xl object-cover">
+                    <div>
+                      <div class="font-bold text-slate-900">Bella</div>
+                      <div class="text-[11px] text-slate-500">Indie Rescue • 1.5 yrs • 16.0kg</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-4">
+                  <div class="font-semibold text-slate-800">Pooja Nair</div>
+                  <div class="text-[11px] text-slate-400">+91 97234-55667</div>
+                </td>
+                <td class="p-4">
+                  <span class="px-2 py-1 rounded bg-amber-50 text-amber-800 font-semibold text-[10px]">Post-Spay Sutures Follow-up</span>
+                </td>
+                <td class="p-4">
+                  <span class="inline-flex items-center gap-1 text-emerald-700 font-bold text-[11px]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active Consent
+                  </span>
+                </td>
+                <td class="p-4 text-right">
+                  <button onclick="alert('Bella dossier: Surgical wound healed. Suture removal scheduled.')" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl font-bold transition">
+                    View Dossier
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: STORE & CAMPAIGNS & EVENTS (EXPLORATION VIEWS) -->
+    <section id="viewStore" class="hidden py-12 px-4 max-w-7xl mx-auto space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900 font-heading">🐾 Canine Wellness Store</h2>
+          <p class="text-xs text-slate-500">Vet-approved pet foods, anti-tick preventives, and orthopedic beds.</p>
+        </div>
+        <button onclick="navigateTo('home')" class="text-xs font-bold text-brand-teal hover:underline">← Back to Home</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="bg-white rounded-2xl border p-4 shadow-sm">
+          <img src="https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=400&auto=format&fit=crop&q=80" class="h-36 w-full object-cover rounded-xl mb-3" alt="Puppy Kibble">
+          <h4 class="font-bold text-sm">Royal Canin Maxi Puppy</h4>
+          <p class="text-xs text-slate-500">Digestive health & joint support</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="font-extrabold text-sm text-slate-900">₹2,850</span>
+            <span class="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded">+150 Coins</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border p-4 shadow-sm">
+          <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&auto=format&fit=crop&q=80" class="h-36 w-full object-cover rounded-xl mb-3" alt="Dog Chew">
+          <h4 class="font-bold text-sm">Himalayan Yak Dental Chews</h4>
+          <p class="text-xs text-slate-500">100% Organic plaque defense</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="font-extrabold text-sm text-slate-900">₹640</span>
+            <span class="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded">+40 Coins</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border p-4 shadow-sm">
+          <img src="https://images.unsplash.com/photo-1544568100-847a948585b9?w=400&auto=format&fit=crop&q=80" class="h-36 w-full object-cover rounded-xl mb-3" alt="Pet Harness">
+          <h4 class="font-bold text-sm">No-Pull Padded Harness</h4>
+          <p class="text-xs text-slate-500">Ergonomic spine protection</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="font-extrabold text-sm text-slate-900">₹1,299</span>
+            <span class="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded">+80 Coins</span>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border p-4 shadow-sm">
+          <img src="https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=400&auto=format&fit=crop&q=80" class="h-36 w-full object-cover rounded-xl mb-3" alt="Grooming Brush">
+          <h4 class="font-bold text-sm">Deshedding Undercoat Blade</h4>
+          <p class="text-xs text-slate-500">Removes loose hair safely</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="font-extrabold text-sm text-slate-900">₹890</span>
+            <span class="text-[10px] text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded">+50 Coins</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 6: WELFARE CAMPAIGNS -->
+    <section id="viewCampaigns" class="hidden py-12 px-4 max-w-7xl mx-auto space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900 font-heading">🍲 Verified Welfare Campaigns</h2>
+          <p class="text-xs text-slate-500">
+            Powered by PawCoins. 
+            <!-- Small font PawCoin info -->
+            <span class="inline-block px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold text-[11px] border border-emerald-200">
+              🪙 1 PawCoin = ₹1 Meal Fund
+            </span>
+          </p>
+        </div>
+        <button onclick="navigateTo('home')" class="text-xs font-bold text-brand-teal hover:underline">← Back to Home</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-3xl border p-6 shadow-sm space-y-4">
+          <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&auto=format&fit=crop&q=80" class="h-44 w-full object-cover rounded-2xl" alt="Indie Feeding Drive">
+          <div>
+            <span class="text-[10px] font-bold text-teal-700 uppercase bg-teal-50 px-2.5 py-0.5 rounded-full">Street Paws Shelter</span>
+            <h3 class="text-base font-bold text-slate-900 mt-1">Winter Feeding Drive: 500 Indie Dogs</h3>
+            <p class="text-xs text-slate-600 mt-1">Providing hot cooked rice, chicken broth, and boiled eggs to vulnerable community dogs.</p>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-semibold text-slate-700">
+              <span>Goal: 10,000 Meals</span>
+              <span class="text-teal-700">7,420 Collected</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-brand-teal h-full" style="width: 74%"></div>
+            </div>
+          </div>
+          <button onclick="alert('Donated 50 PawCoins to Winter Feeding Drive!')" class="w-full py-2.5 bg-brand-teal text-white rounded-xl text-xs font-bold hover:bg-brand-teal-dark transition">
+            Donate Meals with PawCoins
+          </button>
+        </div>
+
+        <div class="bg-white rounded-3xl border p-6 shadow-sm space-y-4">
+          <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&auto=format&fit=crop&q=80" class="h-44 w-full object-cover rounded-2xl" alt="Anti Rabies Camp">
+          <div>
+            <span class="text-[10px] font-bold text-teal-700 uppercase bg-teal-50 px-2.5 py-0.5 rounded-full">Canine Rescue Trust</span>
+            <h3 class="text-base font-bold text-slate-900 mt-1">Rabies Free Metro Initiative</h3>
+            <p class="text-xs text-slate-600 mt-1">Administering free Nobivac Rabies vaccinations and reflective collars to stray dogs.</p>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-semibold text-slate-700">
+              <span>Goal: 2,500 Vaccines</span>
+              <span class="text-teal-700">1,890 Done</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-brand-teal h-full" style="width: 75%"></div>
+            </div>
+          </div>
+          <button onclick="alert('Donated 100 PawCoins to Rabies Free Metro Initiative!')" class="w-full py-2.5 bg-brand-teal text-white rounded-xl text-xs font-bold hover:bg-brand-teal-dark transition">
+            Sponsor Vaccines with PawCoins
+          </button>
+        </div>
+
+        <div class="bg-white rounded-3xl border p-6 shadow-sm space-y-4">
+          <img src="https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?w=600&auto=format&fit=crop&q=80" class="h-44 w-full object-cover rounded-2xl" alt="Accident Trauma Ambulance">
+          <div>
+            <span class="text-[10px] font-bold text-rose-700 uppercase bg-rose-50 px-2.5 py-0.5 rounded-full">24/7 Animal SOS</span>
+            <h3 class="text-base font-bold text-slate-900 mt-1">Street Dog Emergency Trauma Ambulance</h3>
+            <p class="text-xs text-slate-600 mt-1">Funding diesel, saline drips, and orthopedic splints for road-accident canine rescues.</p>
+          </div>
+          <div class="space-y-1">
+            <div class="flex justify-between text-xs font-semibold text-slate-700">
+              <span>Goal: ₹50,000 Support</span>
+              <span class="text-teal-700">₹41,200</span>
+            </div>
+            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+              <div class="bg-brand-teal h-full" style="width: 82%"></div>
+            </div>
+          </div>
+          <button onclick="alert('Donated 100 PawCoins to Emergency Trauma Ambulance!')" class="w-full py-2.5 bg-brand-teal text-white rounded-xl text-xs font-bold hover:bg-brand-teal-dark transition">
+            Support Ambulance Fuel
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 7: COMMUNITY EVENTS -->
+    <section id="viewEvents" class="hidden py-12 px-4 max-w-7xl mx-auto space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900 font-heading">🐾 Community Events & Adoption Melas</h2>
+          <p class="text-xs text-slate-500">Join fellow canine parents and meet indie rescue pups looking for forever homes.</p>
+        </div>
+        <button onclick="navigateTo('home')" class="text-xs font-bold text-brand-teal hover:underline">← Back to Home</button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-3xl border p-6 flex flex-col sm:flex-row gap-5 items-center">
+          <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400&auto=format&fit=crop&q=80" class="h-36 w-36 rounded-2xl object-cover" alt="Agility Walk">
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full">Sun, Oct 19 • Cubbon Park</span>
+            <h3 class="text-base font-bold text-slate-900">Annual Paws in the Park & Socialization Walk</h3>
+            <p class="text-xs text-slate-600">Guided group socialization for golden retrievers, indies, and rescues with certified canine behaviorists.</p>
+            <button onclick="alert('RSVP confirmed for Paws in the Park!')" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition">
+              RSVP (+50 PawCoins)
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl border p-6 flex flex-col sm:flex-row gap-5 items-center">
+          <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&auto=format&fit=crop&q=80" class="h-36 w-36 rounded-2xl object-cover" alt="Adoption Drive">
+          <div class="space-y-2">
+            <span class="text-[10px] font-bold text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-full">Sat, Oct 25 • Indiranagar</span>
+            <h3 class="text-base font-bold text-slate-900">Indie Pup Mega Adoption Mela</h3>
+            <p class="text-xs text-slate-600">Meet 40+ healthy, vaccinated, and dewormed rescue pups ready for adoption by responsible families.</p>
+            <button onclick="alert('RSVP confirmed for Adoption Mela!')" class="px-4 py-2 bg-brand-teal text-white rounded-xl text-xs font-bold hover:bg-brand-teal-dark transition">
+              Volunteer or Adopt
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Login Selection Modal -->
+  <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-100 relative">
+      <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 text-xl font-bold">×</button>
+      
+      <div class="text-center space-y-2">
+        <div class="w-12 h-12 bg-teal-50 text-teal-700 rounded-2xl flex items-center justify-center mx-auto text-2xl">
+          🐾
+        </div>
+        <h3 class="text-2xl font-bold text-slate-900 font-heading">Sign In to PawConnect</h3>
+        <p class="text-xs text-slate-500">Select your account type to access your dedicated workspace.</p>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Option 1: Dog Parent -->
+        <button onclick="setRole('PET_PARENT'); closeAuthModal();" class="w-full p-4 rounded-2xl border-2 border-slate-200 hover:border-teal-500 hover:bg-teal-50/40 text-left transition flex items-center gap-4 group">
+          <div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center text-2xl group-hover:scale-105 transition">
+            🐕
+          </div>
+          <div class="flex-1">
+            <div class="font-bold text-sm text-slate-900">I am a Dog Parent</div>
+            <div class="text-xs text-slate-500">Access pet profiles, vaccine logs, PawCoins, and teleconsultations</div>
+          </div>
+          <span class="text-teal-600 font-bold text-sm group-hover:translate-x-1 transition">→</span>
+        </button>
+
+        <!-- Option 2: Veterinarian -->
+        <button onclick="setRole('VET'); closeAuthModal();" class="w-full p-4 rounded-2xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 text-left transition flex items-center gap-4 group">
+          <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center text-2xl group-hover:scale-105 transition">
+            🩺
+          </div>
+          <div class="flex-1">
+            <div class="font-bold text-sm text-slate-900">I am a Licensed Veterinarian</div>
+            <div class="text-xs text-slate-500">Access clinical queue, consent-verified dossiers, and prescription pad</div>
+          </div>
+          <span class="text-blue-600 font-bold text-sm group-hover:translate-x-1 transition">→</span>
+        </button>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 text-center text-[11px] text-slate-400">
+        Demo accounts pre-configured: <strong class="text-slate-600">Ritu Verma (Parent)</strong> and <strong class="text-slate-600">Dr. Aarav Sharma (Vet)</strong>.
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-10 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">🐾</span>
+        <span class="font-bold text-slate-800 text-sm">PawConnect Integrated Platform</span>
+        <span class="text-slate-300">|</span>
+        <!-- Small font coin mention -->
+        <span class="text-xs text-slate-500">1 PawCoin = ₹1 Street Dog Meal Fund</span>
+      </div>
+      <div class="text-xs text-slate-400">
+        Engineered with Spring Boot, FastAPI, React 18 & Supabase.
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Application State Management
+    let currentRole = null; // null (GUEST), 'PET_PARENT', 'VET'
+    let currentTab = 'home'; // 'home', 'dashboard', 'store', 'campaigns', 'events'
+
+    function setRole(role) {
+      if (role === 'GUEST') {
+        currentRole = null;
+        document.getElementById('ribbonStateText').textContent = 'Guest (Unauthenticated)';
+        document.getElementById('ribbonStateText').className = 'text-amber-400';
+        document.getElementById('unauthActions').classList.remove('hidden');
+        document.getElementById('parentAuthActions').classList.add('hidden');
+        document.getElementById('vetAuthActions').classList.add('hidden');
+        document.getElementById('navLinkParentDash').classList.add('hidden');
+        document.getElementById('navLinkVetDash').classList.add('hidden');
+        navigateTo('home');
+      } else if (role === 'PET_PARENT') {
+        currentRole = 'PET_PARENT';
+        document.getElementById('ribbonStateText').textContent = 'Dog Parent (Ritu Verma)';
+        document.getElementById('ribbonStateText').className = 'text-teal-400';
+        document.getElementById('unauthActions').classList.add('hidden');
+        document.getElementById('parentAuthActions').classList.remove('hidden');
+        document.getElementById('vetAuthActions').classList.add('hidden');
+        document.getElementById('navLinkParentDash').classList.remove('hidden');
+        document.getElementById('navLinkVetDash').classList.add('hidden');
+        navigateTo('dashboard');
+      } else if (role === 'VET') {
+        currentRole = 'VET';
+        document.getElementById('ribbonStateText').textContent = 'Veterinarian (Dr. Aarav Sharma)';
+        document.getElementById('ribbonStateText').className = 'text-blue-400';
+        document.getElementById('unauthActions').classList.add('hidden');
+        document.getElementById('parentAuthActions').classList.add('hidden');
+        document.getElementById('vetAuthActions').classList.remove('hidden');
+        document.getElementById('navLinkParentDash').classList.add('hidden');
+        document.getElementById('navLinkVetDash').classList.remove('hidden');
+        navigateTo('dashboard');
+      }
+    }
+
+    function navigateTo(tab) {
+      currentTab = tab;
+      
+      // Hide all main views
+      const views = ['viewHome', 'viewLoginRequired', 'viewParentDashboard', 'viewVetDashboard', 'viewStore', 'viewCampaigns', 'viewEvents'];
+      views.forEach(v => {
+        const el = document.getElementById(v);
+        if (el) el.classList.add('hidden');
+      });
+
+      // Update active nav styling
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('text-brand-teal', 'font-bold'));
+
+      if (tab === 'home') {
+        document.getElementById('viewHome').classList.remove('hidden');
+        document.getElementById('navLinkHome').classList.add('text-brand-teal', 'font-bold');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (tab === 'dashboard') {
+        if (!currentRole) {
+          // Unauthenticated: gate dashboard and show role login required screen!
+          document.getElementById('viewLoginRequired').classList.remove('hidden');
+        } else if (currentRole === 'PET_PARENT') {
+          // Strictly show Dog Parent Dashboard
+          document.getElementById('viewParentDashboard').classList.remove('hidden');
+          document.getElementById('navLinkParentDash').classList.add('font-bold');
+        } else if (currentRole === 'VET') {
+          // Strictly show Vet Dashboard
+          document.getElementById('viewVetDashboard').classList.remove('hidden');
+          document.getElementById('navLinkVetDash').classList.add('font-bold');
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (tab === 'store') {
+        document.getElementById('viewStore').classList.remove('hidden');
+        document.getElementById('navLinkStore').classList.add('text-brand-teal', 'font-bold');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (tab === 'campaigns') {
+        document.getElementById('viewCampaigns').classList.remove('hidden');
+        document.getElementById('navLinkCampaigns').classList.add('text-brand-teal', 'font-bold');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (tab === 'events') {
+        document.getElementById('viewEvents').classList.remove('hidden');
+        document.getElementById('navLinkEvents').classList.add('text-brand-teal', 'font-bold');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function openAuthModal(role) {
+      if (role) {
+        setRole(role);
+      } else {
+        document.getElementById('authModal').classList.remove('hidden');
+      }
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('hidden');
+    }
+
+    // Default initialization: Land on Home first!
+    window.addEventListener('DOMContentLoaded', () => {
+      setRole('GUEST');
+    });
+  </script>
+</body>
+</html>
