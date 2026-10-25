@@ -15,9 +15,17 @@ Vets and NGOs must be verified by an admin before they can see records or publis
 
 > **Status:** a working foundation, not a finished product. The video consultations, appointments, messaging,
 > consent, AI screening, reminders, admin verification and NGO campaigns are built. The pet store, PawCoins
-> rewards, donations, community events, in-app AI chat and prescriptions are **not built yet** (see
-> [Roadmap](#roadmap)). The code has been checked in a sandbox but the full stack has not yet been started against
-> live services (see [Testing](#testing-and-what-has-been-verified)).
+> rewards, donations, community events, in-app AI chat and prescriptions are **not built yet**, and neither are the
+> early-warning and prevention features planned for tick-borne disease (see [Roadmap](#roadmap) and
+> [Future scope](#future-scope-early-detection-and-prevention)). The code has been checked in a sandbox but the full
+> stack has not yet been started against live services (see [Testing](#testing-and-what-has-been-verified)).
+
+## Why this project exists
+
+Tick-borne diseases such as babesiosis and ehrlichiosis are hard to catch early. The first signs (tiredness, lower
+appetite, a mild fever) look like many ordinary things, and by the time pale or yellow gums appear the illness is
+often advanced. PawConnect aims to close that gap: help dog parents notice small changes sooner, prevent infestations
+in the first place, and get the right information to a vet quickly.
 
 ## How it fits together
 
@@ -314,10 +322,87 @@ any remaining problems will show up. Run `scripts/check-services.sh` after deplo
   endpoint.
 - Row-level security is not used on Aiven; access control lives in the backend services.
 
+## Roadmap
 
+**Platform features**
+
+- [ ] PawCoins rewards and wallet, and donating coins to street-dog campaigns (the home page mentions
+      1 PawCoin = 1 street-dog meal; it is not implemented)
+- [ ] Pet store: catalogue, cart, checkout
+- [ ] Community events and RSVPs
+- [ ] AI chat assistant in the app (the AI service already has a `/chat` endpoint)
+- [ ] Digital prescriptions
+
+**Quality and security**
+
+- [ ] First end-to-end run of the full stack against live services, including a real video call between two
+      devices on different networks
+- [ ] Backend and frontend test suites, including the consent flow against a PostgreSQL container
+- [ ] Move role assignment to `app_metadata`
+
+**Health monitoring and prevention**
+
+- [ ] See [Future scope](#future-scope-early-detection-and-prevention) below
 
 The store, rewards, events and prescriptions already exist in [`archive3-extras/`](archive3-extras/) for a different
-database design and need porting.
+database design and need porting. The store and rewards stay on hold until the health-monitoring core below is solid.
+
+## Future scope: early detection and prevention
+
+None of the following is built yet. It is planned work, motivated by how hard tick-borne illness is to catch early
+(see [Why this project exists](#why-this-project-exists)). Each item fits the existing architecture, and new tables
+would arrive as a `V4__...sql` migration.
+
+### 1. Tick-borne red-flag rules in AI screening
+
+The AI service already scores symptoms with transparent rules. The plan is to add rules for tick-borne and related
+conditions (for example babesiosis, ehrlichiosis and other causes of jaundice or anemia), including:
+
+- Yellow gums, skin or eyes always produce an urgent "see a vet today" result, whatever the other inputs are.
+- Pale gums together with lethargy, fever or poor appetite produce an urgent result.
+- A recent tick history raises the score when combined with any of the signs above.
+- Nosebleeds, bruising or tiny red spots on the gums are flagged as possible bleeding or low platelets.
+- Dark orange or brown urine and pale stools are flagged as possible liver or blood-breakdown signs.
+
+These rules would be **hard overrides**: the LLM only explains the result and can never soften or remove an urgent
+message. The existing fixed-template fallback keeps working when the LLM is unavailable.
+
+### 2. Parasite prevention tracking
+
+- A tick and flea **preventive** record type next to vaccinations and medication, with recurring reminders (monthly
+  or every few months, depending on the product).
+- A **tick found** log with date and body location (ears, neck, between the toes, skin folds).
+- A prompt to treat the home and kennel when ticks are found repeatedly, since most of the tick population lives in
+  the surroundings and not on the dog.
+
+### 3. Gum-colour and baseline check-ins
+
+A short daily or weekly check-in covering appetite, water intake, energy, gum colour (with a reference chart or
+photo) and temperature where the owner has a thermometer. Changes are compared against the dog's own baseline, so
+small drifts over several days stand out, and a worsening trend can trigger a notification or a suggestion to book
+an appointment.
+
+### 4. Regional education content
+
+Short, region-aware guides for dog parents and for NGO campaigns, covering:
+
+- Brown dog ticks (they live indoors and in kennels, not only in grass) and year-round prevention in warm climates.
+- Early signs of babesiosis and ehrlichiosis, and when to see a vet the same day.
+- Home and kennel clean-up steps.
+
+### 5. Emergency path
+
+When screening returns an urgent result, show a prominent action to find a nearby vet or emergency clinic, and make
+it easy to share the symptom log and check-in history with that vet. This complements the emergency notice already
+shown on video consultations, which are not for emergencies.
+
+### Design and safety notes for these features
+
+- Red-flag rules and thresholds should be **reviewed by a licensed veterinarian** before real owners rely on them.
+- All new data keeps the existing rules: owner-only by default, vet access only with active consent, and audit
+  logging of record views.
+- Screening stays decision support only. It does not diagnose, and a veterinarian remains responsible for diagnosis
+  and treatment.
 
 ## Contributing and license
 
@@ -326,4 +411,3 @@ repository publicly.
 
 Veterinary decision support only: nothing in PawConnect is a diagnosis, and a veterinarian remains responsible for
 diagnosis and treatment.
-                                                   
